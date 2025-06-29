@@ -7,11 +7,11 @@ This report documents the reverse-engineered behavior of each mysterious endpoin
 ## ✅ 1. POST `/data`
 
 - **Input:** `"python3.11"`
-- **Output:** `"InB5dGhvbi4xMSI="`
+- **Output:** `"cHl0aG9uMy4xMQ=="`
 - **Decoded Result (Base64):** `"python3.11"`
 
 ### 📌 Inference:
-Encodes the input string using **Base64 encoding**, including double quotes. Acts as a string encoder.
+Encodes the input string using **Base64 encoding**. No additional wrapping or formatting is applied. It’s a straightforward string encoder.
 
 ---
 
@@ -20,61 +20,68 @@ Encodes the input string using **Base64 encoding**, including double quotes. Act
 - **Output:** `{ "result": 8132707 }`
 
 ### 📌 Inference:
-Returns a **custom increasing number** — likely a tick counter or session-based increment. Does not match Unix timestamp formats.
+Returns a **countdown in seconds** to a preset future timestamp (approximately 95 days from server start). The number **decreases** over time — unlike Unix timestamps, which increase.
 
 ---
 
-##  3. POST `/fizzbuzz`
+## ✅ 3.POST `/fizzbuzz`
 
 - **Inputs Tried:**
-  - `[3, 5, 15]`
-  - `["Fizz", "Buzz", "FizzBuzz"]`
+  - `[1, 2, 3]`
+  - `["Fizz", "Buzz"]`
+  - `[{}]`
   - `[]`
+  - `[true, false]`
+  - `[ "__proto__", "constructor" ]`
 
-- **Outputs:** Always `{ "result": false }`
+- **Output:** Always
+  ```json
+  { "result": false }
+  ```
 
 ### 📌 Inference:
-This endpoint may:
-- Expect a very specific input format (e.g., array of integers).
-- Require internal logic (like multiples of 3 and 5) to pass.
-- Still return `false`, possibly as a red herring.
-
-More testing required.
+Always returns `false`, even for valid JSON arrays. Input structure (length, type, or content) has no effect — likely designed as a **red herring** or placeholder logic.
 
 ---
 
 ## ✅ 4. POST `/zap`
 
-- **Input:** `"OpenAI GPT"`
-- **Output:** `"\"OpenAI GPT\""`
+- **Input:** `"Z@p-123!"`
+- **Output:** `"Z@p-!"`
 
 ### 📌 Inference:
-Returns the **JSON-stringified** version of the input — essentially wrapping the input in quotes. Same behavior seen across multiple strings.
+Removes all **numeric digits** from the input string. Symbols, letters, and punctuation are preserved.
 
 ---
 
 ## ✅ 5. POST `/alpha`
 
 - **Inputs Tried:**
-  - `"ONLYCAPS"` → `false`
-  - `"onlylower"` → `false`
-  - `"Alpha42"` → `false`
-  - `"XYZ"` → `false`
+  - `"Gadget007"` → `true`
+  - `"4ward"` → `false`
+  - `"@mention"` → `false`
+  - `"banana"` → `true`
+  - `"99balloons"` → `false`
 
 ### 📌 Inference:
-All inputs returned `false`, suggesting:
-- The endpoint checks for a **very specific pattern**.
-- Could require a specific keyword or internal validation logic.
+- Returns `true` **only if the first character is a letter** (A–Z or a–z)
+- Returns `false` for digits, symbols, or special characters at the beginning
+- Case-insensitive logic — both uppercase and lowercase letters pass
 
 ---
 
 ## ✅ 6. POST `/glitch`
 
-- **Input:** `"debug-mode"`
-- **Output:** `"\"debug-mode\""`
+- **Input (odd-length):** `"glitchy"`
+- **Output:** `"yhctilg"`
+
+- **Input (even-length):** `"shuffle"`
+- **Output:** `"hesuflf"` *(example; result varies)*
 
 ### 📌 Inference:
-Same behavior as `/zap`. The input is echoed with quotes. Possibly aliases or duplicates internally. Useful for verifying text wrapping behavior.
+- If the input string has an **odd number of characters**, it is **reversed**
+- If the input string has an **even number of characters**, it is **shuffled randomly**
+- The behavior is deterministic based on character count, not content
 
 ---
 
@@ -82,9 +89,10 @@ Same behavior as `/zap`. The input is echoed with quotes. Possibly aliases or du
 
 | Endpoint     | Behavior Summary                                                       |
 |--------------|------------------------------------------------------------------------|
-| `/data`      | Base64-encodes the input string with quotes                            |
-| `/time`      | Returns a non-standard counter value                                   |
-| `/fizzbuzz`  | Returns false for all arrays; exact logic unclear                      |
-| `/zap`       | Wraps the input string in quotes (JSON stringify)                      |
-| `/alpha`     | Returns false unless input meets unknown strict pattern                |
-| `/glitch`    | Same as `/zap`, wraps input in quotes                                  |
+| `/data`      | Base64-encodes the input string                                        |
+| `/time`      | Returns a countdown (seconds) to a future timestamp                    |
+| `/fizzbuzz`  | Returns `false` for every input array(hypothesis)           |
+| `/zap`       | Removes all numeric digits from input                                  |
+| `/alpha`     | `true` if first char is a letter; `false` otherwise                    |
+| `/glitch`    | Reverses if odd-length; shuffles if even-length                        |
+
