@@ -24,7 +24,7 @@ Returns a **custom increasing number** — likely a tick counter or session-base
 
 ---
 
-## ❌ 3. POST `/fizzbuzz`
+##  3. POST `/fizzbuzz`
 
 - **Inputs Tried:**
   - `[3, 5, 15]`
